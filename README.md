@@ -1,8 +1,11 @@
 
 # Mini Game Engine
 
-Small game engine for creating small or medium-sized 2D/3D games
+Small web game engine for creating small or medium-sized 2D/3D games
 
+banan - engine
+
+agario - example
 
 
 ## Authors
@@ -23,7 +26,7 @@ Small game engine for creating small or medium-sized 2D/3D games
 
 ## Demo
 
-![demo](https://github.com/olejaaaaaaaa/Banan/demo.gif)
+![demo](https://github.com/olejaaaaaaaa/Banan/blob/main/demo.gif)
 
 ## FAQ
 

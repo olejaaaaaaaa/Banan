@@ -1,0 +1,44 @@
+[package]
+name = "banan"
+version = "0.1.0"
+authors = ["oleja <olejav7@gmail.com>"]
+edition = "2018"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+
+[dependencies]
+console_error_panic_hook = "0.1.6"
+console_log = { version = "1.0", features = ["color"] }
+winit = { version = "0.29", features = ["rwh_05"] }
+bytemuck = { version = "1.16", features = [ "derive" ] }
+log = "0.4"
+pollster = "0.3"
+wgpu = { version = "22.0", features = ["webgl"]}
+wasm-bindgen = "0.2"
+web-sys = { version = "0.3.69", features = [
+  "Document",
+  "Window",
+  "BinaryType",
+  "Blob",
+  "ErrorEvent",
+  "FileReader",
+  "MessageEvent",
+  "ProgressEvent",
+  "WebSocket",
+  "Element",
+  'AudioContext',
+  'AudioDestinationNode',
+  'AudioNode',
+  'AudioParam',
+  'GainNode',
+  'OscillatorNode',
+  'OscillatorType',
+]}
+
+[dev-dependencies]
+wasm-bindgen-test = "0.3.34"
+
+[profile.release]
+opt-level = "s"

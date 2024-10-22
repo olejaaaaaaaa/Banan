@@ -20,6 +20,7 @@ use log::{debug, error, info, warn};
 
 use banan::vertex_buffer::*;
 use banan::core::*;
+use banan::*;
 
 #[wasm_bindgen]
 pub fn main() {
@@ -29,23 +30,30 @@ pub fn main() {
 pub async fn run() {
 
     std::panic::set_hook(Box::new(console_error_panic_hook::hook));
-    console_log::init_with_level(log::Level::Info);
+    console_log::init_with_level(log::Level::Warn);
 
     let main_loop = winit::event_loop::EventLoop::new().unwrap();
     let mut window = winit::window::WindowBuilder::new().build(&main_loop).unwrap();
     window.request_inner_size(PhysicalSize::new(640, 640));
     
+    debug_play();
+
     let mut ctx = WebGPUContext::new(&window).await;
-    let mut rb = RenderObject::default(&ctx, PrimitiveTopology::LineStrip);
+    let mut ui = UI::new(ctx.clone());
 
-    rb.add_mesh(&ctx, vec![
-        Vertex3D{ pos: [ 0.0,   0.5,  0.0],   color: [1.0, 0.0, 0.0] },
-        Vertex3D{ pos: [-0.5,  -0.5,  0.0],   color: [0.0, 1.0, 0.0] },
-        Vertex3D{ pos: [ 0.5,  -0.5,  0.0],   color: [0.0, 0.0, 1.0] },
-        Vertex3D{ pos: [ 0.0,   0.5,  0.0],   color: [1.0, 0.0, 0.0] }
-    ]);
+    let mut rb = RenderObject::default(ctx.clone(), PrimitiveTopology::LineStrip);
 
-    let all_obj = vec![rb];
+    /*
+        rb.set_shader()
+        rb.add_uniform()
+        rb.add_indices()
+        rb.update_uniform()
+    */
+
+    rb.add_mesh(create_circle_2D(0.3, 0.0, 0.0));
+    rb.add_mesh(create_rectangle_2D(0.3, 0.6, 0.0, 0.0));
+
+    let mut all_obj = vec![rb];
 
     main_loop.run(move |event, event_loop_window_target| {
 
@@ -56,6 +64,9 @@ pub async fn run() {
             }
 
             winit::event::Event::WindowEvent { window_id, event } => {
+
+                ui.input_update(event.clone());
+
                 match event {
 
                     WindowEvent::Destroyed => {
@@ -78,6 +89,5 @@ pub async fn run() {
         }
 
     });
-
 
 }

@@ -1,6 +1,6 @@
 #![allow(warnings)]
 #![allow(clippy::all)]
-use std::iter;
+use std::{iter, rc::Rc};
 
 use dpi::PhysicalSize;
 use event::Event;
@@ -17,7 +17,6 @@ use vertex_buffer::*;
 use crate::RenderObject;
 
 pub struct WebGPUContext<'s> {
-    pub resized: bool,
     pub window: &'s Window,
     surface: Surface<'s>,
     adapter: wgpu::Adapter,
@@ -29,9 +28,11 @@ pub struct WebGPUContext<'s> {
     queue: wgpu::Queue,
 }
 
+static mut resized: bool = false;
+
 impl<'s> WebGPUContext<'s> {
 
-    pub async fn new(window: &'s Window ) -> Self {
+    pub async fn new(window: &'s Window ) -> Rc<Self> {
         Self::create_canvas(&window);
 
         let instance = wgpu::Instance::default();
@@ -67,7 +68,7 @@ impl<'s> WebGPUContext<'s> {
             desired_maximum_frame_latency: 2,
         };
 
-        Self { 
+        Rc::new(Self { 
             window,
             adapter,
             device,
@@ -77,8 +78,7 @@ impl<'s> WebGPUContext<'s> {
             surface_format,
             queue,
             surface,
-            resized: false
-        }
+        })
     }
 
    fn create_canvas(window: &Window) {
@@ -122,10 +122,10 @@ impl<'s> WebGPUContext<'s> {
 
     }
 
-    pub fn create_bind_group(&self, bind: &BindGroupLayout, buffer: &Buffer) {
+    pub fn create_bind_group(&self, bind_group_layout: &BindGroupLayout, buffer: &Buffer) {
         self.device.create_bind_group(&BindGroupDescriptor {
             label: None,
-            layout: bind,
+            layout: bind_group_layout,
             entries: &[BindGroupEntry {
                 binding: 0,
                 resource: wgpu::BindingResource::Buffer(BufferBinding{
@@ -213,7 +213,7 @@ impl<'s> WebGPUContext<'s> {
         pipeline
     }
 
-    pub fn resize(&mut self, size: PhysicalSize<u32>) {
+    pub fn resize(&self, size: PhysicalSize<u32>) {
 
         let surface_config = wgpu::SurfaceConfiguration {
             usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
@@ -227,16 +227,16 @@ impl<'s> WebGPUContext<'s> {
         };
 
         self.surface.configure(&self.device, &surface_config);
-        self.resized = true;
+        unsafe { resized = true };
     }
 
-    pub fn update_buffer(&mut self, buffer: &Buffer, content: &[u8]) {
+    pub fn update_buffer(&self, buffer: &Buffer, content: &[u8]) {
         self.queue.write_buffer(buffer, 0, content);
     }
 
     pub fn draw(&mut self, pipeline: &RenderPipeline, vertex: &Buffer) {
 
-        if !self.resized { return; }
+        if !unsafe { resized } { return; }
 
         let mut encoder = self.device.create_command_encoder(&CommandEncoderDescriptor { label: Some("Main Encoder") });
         let mut output = self.surface.get_current_texture().unwrap();
@@ -269,7 +269,7 @@ impl<'s> WebGPUContext<'s> {
     }
 
     pub fn draw_debug(&self, obj: &Vec<RenderObject>) {
-        if !self.resized { return; }
+        if !unsafe { resized } { return; }
 
         let mut encoder = self.device.create_command_encoder(&CommandEncoderDescriptor { label: Some("Main Encoder") });
         let mut output = self.surface.get_current_texture().unwrap();

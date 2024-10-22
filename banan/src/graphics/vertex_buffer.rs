@@ -2,7 +2,7 @@ use wgpu::{BufferAddress, VertexAttribute, VertexBufferLayout, VertexFormat, Ver
 use bytemuck::*;
 
 pub trait Vertex {
-    fn content(&self) -> &[u8];
+    fn bytes(&self) -> &[u8];
     fn layout(&self) -> &VertexBufferLayout<'static>;
 }
 
@@ -15,7 +15,7 @@ pub struct Vertex3D {
 
 impl Vertex for Vec<Vertex3D> {
 
-    fn content(&self) -> &[u8] {
+    fn bytes(&self) -> &[u8] {
         &bytemuck::cast_slice(self)
     }
 

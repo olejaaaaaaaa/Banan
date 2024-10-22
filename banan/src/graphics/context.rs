@@ -1,5 +1,5 @@
 #![allow(warnings)]
-
+#![allow(clippy::all)]
 use std::iter;
 
 use dpi::PhysicalSize;
@@ -13,6 +13,8 @@ use pollster::*;
 #[path ="vertex_buffer.rs"]
 mod vertex_buffer;
 use vertex_buffer::*;
+
+use crate::RenderObject;
 
 pub struct WebGPUContext<'s> {
     pub resized: bool,
@@ -116,6 +118,10 @@ impl<'s> WebGPUContext<'s> {
         buffer
     }
 
+    pub fn laod_texture(&self) {
+
+    }
+
     pub fn create_bind_group(&self, bind: &BindGroupLayout, buffer: &Buffer) {
         self.device.create_bind_group(&BindGroupDescriptor {
             label: None,
@@ -123,7 +129,7 @@ impl<'s> WebGPUContext<'s> {
             entries: &[BindGroupEntry {
                 binding: 0,
                 resource: wgpu::BindingResource::Buffer(BufferBinding{
-                    buffer: buffer,
+                    buffer,
                     offset: 16,
                     size: None,
                 }),
@@ -254,12 +260,48 @@ impl<'s> WebGPUContext<'s> {
 
             rpass.set_pipeline(pipeline);
             rpass.set_vertex_buffer(0, vertex.slice(..));
-            rpass.draw(0..4, 0..1);
+            rpass.draw(0..3, 0..1);
         }    
       
         self.queue.submit(iter::once(encoder.finish()));
         output.present();
 
+    }
+
+    pub fn draw_debug(&self, obj: &Vec<RenderObject>) {
+        if !self.resized { return; }
+
+        let mut encoder = self.device.create_command_encoder(&CommandEncoderDescriptor { label: Some("Main Encoder") });
+        let mut output = self.surface.get_current_texture().unwrap();
+
+        let view = output.texture.create_view(&wgpu::TextureViewDescriptor::default());
+        {
+            let mut rpass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
+                label: Some("Render Pass"),
+                color_attachments: &[Some(wgpu::RenderPassColorAttachment {
+                    view: &view,
+                    resolve_target: None,
+                    ops: wgpu::Operations {
+                        load: wgpu::LoadOp::Clear(Color { r: 0.0, g: 0.0, b: 0.0, a: 1.0 }),
+                        store: wgpu::StoreOp::Discard,
+                    },
+                })],
+                depth_stencil_attachment: None,
+                occlusion_query_set: None,
+                timestamp_writes: None,
+            });
+
+            for i in obj {
+                rpass.set_pipeline(&i.render);
+                for v in 0..i.buffer.len() {
+                    rpass.set_vertex_buffer(0, i.buffer[v].slice(..));
+                    rpass.draw(0..i.count_vertex[v] as u32, 0..1);
+                }
+            }
+        }    
+      
+        self.queue.submit(iter::once(encoder.finish()));
+        output.present();
     }
 
 }

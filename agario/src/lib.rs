@@ -19,13 +19,12 @@ extern crate log;
 use log::{debug, error, info, warn};
 
 use banan::vertex_buffer::*;
+use banan::core::*;
 
 #[wasm_bindgen]
 pub fn main() {
     pollster::block_on(run());
 }
-
-const test: &str = include_str!("shaders/test.wgsl");
 
 pub async fn run() {
 
@@ -33,24 +32,20 @@ pub async fn run() {
     console_log::init_with_level(log::Level::Info);
 
     let main_loop = winit::event_loop::EventLoop::new().unwrap();
-    let mut window = winit::window::WindowBuilder::new().with_inner_size(PhysicalSize::new(640, 640)).build(&main_loop).unwrap();
+    let mut window = winit::window::WindowBuilder::new().build(&main_loop).unwrap();
     window.request_inner_size(PhysicalSize::new(640, 640));
     
     let mut ctx = WebGPUContext::new(&window).await;
-    let shader = ctx.create_shader(test);
+    let mut rb = RenderObject::default(&ctx, PrimitiveTopology::LineStrip);
 
-    let layout = ctx.create_pipeline_layout(vec![]);
+    rb.add_mesh(&ctx, vec![
+        Vertex3D{ pos: [ 0.0,   0.5,  0.0],   color: [1.0, 0.0, 0.0] },
+        Vertex3D{ pos: [-0.5,  -0.5,  0.0],   color: [0.0, 1.0, 0.0] },
+        Vertex3D{ pos: [ 0.5,  -0.5,  0.0],   color: [0.0, 0.0, 1.0] },
+        Vertex3D{ pos: [ 0.0,   0.5,  0.0],   color: [1.0, 0.0, 0.0] }
+    ]);
 
-    let mut c: Vec<Vertex3D> = vec![
-        Vertex3D{pos: [ 0.0,  0.5, 0.0 ], color: [1.0, 0.0, 0.0]},
-        Vertex3D{pos: [-0.5, -0.5, 0.0 ], color: [0.0, 1.0, 0.0]},
-        Vertex3D{pos: [ 0.5, -0.5, 0.0 ], color: [0.0, 0.0, 1.0]},
-        Vertex3D{pos: [ 0.0,  0.5, 0.0 ], color: [1.0, 0.0, 1.0]},
-    ];
-
-    let b = ctx.create_vertex_buffer(c.content()); 
-    let pipeline = ctx.create_pipeline(PrimitiveTopology::LineStrip, layout, shader, c.layout());
-    
+    let all_obj = vec![rb];
 
     main_loop.run(move |event, event_loop_window_target| {
 
@@ -68,16 +63,7 @@ pub async fn run() {
                     }
 
                     WindowEvent::RedrawRequested => {
-
-                        for i in &mut c {
-                            i.color[0] -= 0.001; i.pos[0] += (Date::new_0().get_utc_seconds() as f32).cos() / 100.0;
-                            i.color[1] -= 0.001; i.pos[1] += (Date::new_0().get_utc_seconds() as f32).sin() / 100.0;
-                            i.color[2] -= 0.001;
-                        }
-
-                        ctx.update_buffer(&b, c.content());
-                        ctx.draw(&pipeline, &b);
-                        
+                        ctx.draw_debug(&all_obj);                
                     }
 
                     WindowEvent::Resized(size) => {

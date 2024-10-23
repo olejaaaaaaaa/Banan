@@ -18,7 +18,7 @@ agario - example
 Small game engine for creating small or medium-sized 2D/3D games
 
 
-![project](https://github.com/olejaaaaaaaa/Banan/blob/main/s.png)
+![project](https://github.com/olejaaaaaaaa/Banan/blob/main/structure-project.png)
 
 
 [![GPLv3 License](https://img.shields.io/badge/License-GPL%20v3-yellow.svg)](https://opensource.org/licenses/)
@@ -28,6 +28,7 @@ Small game engine for creating small or medium-sized 2D/3D games
 ## Demo
 
 ![demo](https://github.com/olejaaaaaaaa/Banan/blob/main/demo.gif)
+![demo](https://github.com/olejaaaaaaaa/Banan/blob/main/121.jpg)
 
 ## FAQ
 

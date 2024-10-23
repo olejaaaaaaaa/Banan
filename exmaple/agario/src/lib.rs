@@ -37,18 +37,11 @@ pub async fn run() {
     window.request_inner_size(PhysicalSize::new(640, 640));
     
     debug_play();
-
+    
     let mut ctx = WebGPUContext::new(&window).await;
     let mut ui = UI::new(ctx.clone());
-
+    
     let mut rb = RenderObject::default(ctx.clone(), PrimitiveTopology::LineStrip);
-
-    /*
-        rb.set_shader()
-        rb.add_uniform()
-        rb.add_indices()
-        rb.update_uniform()
-    */
 
     rb.add_mesh(create_circle_2D(0.3, 0.0, 0.0));
     rb.add_mesh(create_rectangle_2D(0.3, 0.6, 0.0, 0.0));
@@ -66,6 +59,7 @@ pub async fn run() {
             winit::event::Event::WindowEvent { window_id, event } => {
 
                 ui.input_update(event.clone());
+                ui.draw();
 
                 match event {
 
@@ -74,6 +68,11 @@ pub async fn run() {
                     }
 
                     WindowEvent::RedrawRequested => {
+
+                        for i in &mut all_obj {
+                            i.move_object(0, 0.001, 0.0, 0.0);
+                        }
+
                         ctx.draw_debug(&all_obj);                
                     }
 
@@ -84,10 +83,8 @@ pub async fn run() {
                     _ => ()
                 }
             }
-
             _ => ()
         }
-
     });
 
 }

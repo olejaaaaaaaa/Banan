@@ -43,10 +43,25 @@ impl<'s> WebGPUContext<'s> {
             compatible_surface: Some(&surface) 
         }).await.expect("Error create adapter");
 
+        // for webgl
+        let limits = wgpu::Limits {
+            max_compute_workgroups_per_dimension: 0, // Задайте допустимое значение
+            max_compute_workgroup_size_z: 0,
+            max_compute_workgroup_size_y: 0,
+            max_compute_workgroup_size_x: 0,
+            max_compute_invocations_per_workgroup: 0,
+            max_compute_workgroup_storage_size: 0,
+            max_storage_buffer_binding_size: 0,
+            max_storage_textures_per_shader_stage: 0,
+            max_storage_buffers_per_shader_stage: 0,
+            max_dynamic_storage_buffers_per_pipeline_layout: 0,
+            ..Default::default()
+        };
+
         let (device, queue) = adapter.request_device(&DeviceDescriptor { 
             label: Some("Main Adapter"), 
             required_features: Features::empty(), 
-            required_limits: Limits::downlevel_webgl2_defaults(), 
+            required_limits: limits, 
             memory_hints: MemoryHints::Performance
         }, None).await.expect("Error create device or queue");
 

@@ -44,3 +44,8 @@ impl Vertex for Vec<Vertex3D> {
 }
 
 
+macro_rules! power {
+    ($value:expr, squared) => { $value.pow(2_i32) };
+    ($value:expr, cubed) => { $value.pow(3_i32) };
+}
+

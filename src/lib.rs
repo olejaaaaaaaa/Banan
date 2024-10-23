@@ -27,6 +27,10 @@ pub use audio::*;
 pub mod gui;
 pub use gui::*;
 
+#[path="device/mod.rs"]
+pub mod device;
+pub use device::*;
+
 #[path="net/mod.rs"]
 pub mod net;
 pub use net::*;
@@ -42,4 +46,8 @@ pub use physics::*;
 #[path="resource_manager/mod.rs"]
 pub mod resource_manager;
 pub use resource_manager::*;
+
+#[path="scene/mod.rs"]
+pub mod scene;
+pub use scene::*;
 

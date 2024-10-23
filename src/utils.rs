@@ -39,7 +39,7 @@ pub fn create_rectangle_2D(width: f32, heigth: f32, x: f32, y: f32) -> Vec<Verte
     );
 
     v.push(
-        Vertex3D { pos: [x, y, 0.0], color: [0.0, 0.0, 0.1] },
+        Vertex3D { pos: [x, y, 0.0], color: [0.0, 0.0, 1.0] },
     );
 
     v

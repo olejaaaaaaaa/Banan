@@ -42,15 +42,15 @@ impl<'s> RenderObject<'s> {
         self.count_vertex.push(vertex.len());
     }
 
-    pub fn set_mesh(&mut self,  vertex: Vec<Vertex3D>, index: usize) {
-        if index > vertex.len()-1 { warn!("Index > Vertex len"); return; }
-        
-        self.mesh[index] = vertex;
-        self.webgpu_context.update_buffer(&self.buffer[index], self.mesh[index].bytes());
-    }
+    pub fn move_object(&mut self, index: usize, x: f32, y: f32, z: f32) {
+        let b = &mut self.mesh[index];
+        for i in b {
+            i.pos[0] += x;
+            i.pos[1] += y;
+            i.pos[2] += z;
+        }
 
-    pub fn get_mesh(&self, index: usize) -> Vec<Vertex3D> {
-        self.mesh[index].clone()
+        self.webgpu_context.update_buffer(&self.buffer[index], self.mesh[index].bytes());
     }
 
     pub fn sub_mesh(&mut self, index: usize) {

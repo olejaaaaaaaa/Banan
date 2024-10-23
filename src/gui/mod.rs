@@ -37,6 +37,10 @@ impl<'s> UI<'s> {
         }
     }
 
+    pub fn draw(&self) {
+        // Draw UI
+    }
+
     pub fn input_update(&self, event: WindowEvent) {
         match event {
 

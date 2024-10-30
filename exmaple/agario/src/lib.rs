@@ -18,9 +18,7 @@ extern crate console_error_panic_hook;
 extern crate log;
 use log::{debug, error, info, warn};
 
-use banan::vertex_buffer::*;
-use banan::core::*;
-use banan::*;
+use hecs::*;
 
 #[wasm_bindgen]
 pub fn main() {
@@ -35,49 +33,38 @@ pub async fn run() {
     let main_loop = winit::event_loop::EventLoop::new().unwrap();
     let mut window = winit::window::WindowBuilder::new().build(&main_loop).unwrap();
     window.request_inner_size(PhysicalSize::new(640, 640));
-    
+
     debug_play();
-    
-    let mut ctx = WebGPUContext::new(&window).await;
-    let mut ui = UI::new(ctx.clone());
-    
-    let mut rb = RenderObject::default(ctx.clone(), PrimitiveTopology::LineStrip);
 
-    rb.add_mesh(create_circle_2D(0.3, 0.0, 0.0));
-    rb.add_mesh(create_rectangle_2D(0.3, 0.6, 0.0, 0.0));
+    let ctx = WebGPUContextBuilder::new().await.build();
+    let mut world = GameWorld::new(ctx, &window).await;
+    let player = world.create_entity();
 
-    let mut all_obj = vec![rb];
+    player.add_component([0.0, 0.0, 0.0]);
+
 
     main_loop.run(move |event, event_loop_window_target| {
 
         match event {
 
             winit::event::Event::AboutToWait => {
-                ctx.window.request_redraw();
+
             }
 
             winit::event::Event::WindowEvent { window_id, event } => {
 
-                ui.input_update(event.clone());
-                ui.draw();
-
                 match event {
 
                     WindowEvent::Destroyed => {
-                        
+
                     }
 
                     WindowEvent::RedrawRequested => {
 
-                        for i in &mut all_obj {
-                            i.move_object(0, 0.001, 0.0, 0.0);
-                        }
-
-                        ctx.draw_debug(&all_obj);                
                     }
 
                     WindowEvent::Resized(size) => {
-                        ctx.resize(size);
+
                     }
 
                     _ => ()

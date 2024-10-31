@@ -42,6 +42,9 @@ pub use bind_group_layout::*;
 mod bind_group_layout_entry;
 pub use bind_group_layout_entry::*;
 
+mod pipelinelayout;
+use pipelinelayout::*;
+
 type Id = i64;
 
 pub struct Entity<'s,> {

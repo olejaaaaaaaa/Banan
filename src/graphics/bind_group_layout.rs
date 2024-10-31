@@ -7,12 +7,13 @@ use super::{ComponentBindGroupLayoutEntry, Entity, Id};
 
 
 trait TraitBindGroupLayout {
-    fn add_bind_group_layout(&self);
+    fn add_bind_group_layout(&mut self);
 }
 
 impl TraitBindGroupLayout for Entity<'_> {
-    fn add_bind_group_layout(&self) {
+    fn add_bind_group_layout(&mut self) {
         let component = ComponentBindGrouplayout::new(self);
+        self.add_component(component);
     }
 }
 
@@ -24,10 +25,10 @@ impl ComponentBindGrouplayout {
     fn new(entity: &Entity) -> ComponentBindGrouplayout {
 
         let bind_group_layout_entry = entity.get_components::<ComponentBindGroupLayoutEntry>().unwrap().clone();
-        let res = entity.game_resource.borrow();
+        let mut res = entity.game_resource.borrow_mut();
         let entry = bind_group_layout_entry.iter().map(|x| res.bind_group_layout_entry[&x.bind_group_layout_entry_id]).collect::<Vec<_>>();
 
-        let bind_group_layout_entry = res.ctx.device.create_bind_group_layout(&BindGroupLayoutDescriptor {
+        let bind_group_layout = res.ctx.device.create_bind_group_layout(&BindGroupLayoutDescriptor {
             label: None,
             entries: entry.as_slice()
         });

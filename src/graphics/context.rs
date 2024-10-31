@@ -25,9 +25,7 @@ pub struct WebGPUContext<'s> {
 
 pub static mut resized: bool = false;
 
-///
-///
-/// All
+
 impl<'s> WebGPUContext<'s> {
 
     pub fn resize(&self, size: PhysicalSize<u32>) {
@@ -128,21 +126,35 @@ impl<'s> WebGPUContextBuilder<'s> {
 
     }
 
-    pub fn with_webgl_limits(mut self) {
-        // for webgl
-        // let limits = wgpu::Limits {
-        //     max_compute_workgroups_per_dimension: 0,
-        //     max_compute_workgroup_size_z: 0,
-        //     max_compute_workgroup_size_y: 0,
-        //     max_compute_workgroup_size_x: 0,
-        //     max_compute_invocations_per_workgroup: 0,
-        //     max_compute_workgroup_storage_size: 0,
-        //     max_storage_buffer_binding_size: 0,
-        //     max_storage_textures_per_shader_stage: 0,
-        //     max_storage_buffers_per_shader_stage: 0,
-        //     max_dynamic_storage_buffers_per_pipeline_layout: 0,
-        //     ..Default::default()
-        // };
+    pub async fn with_webgl2_limits(mut self) {
+
+    }
+
+    pub async fn with_webgl_limits(mut self) {
+
+        let limits = wgpu::Limits {
+            max_compute_workgroups_per_dimension: 0,
+            max_compute_workgroup_size_z: 0,
+            max_compute_workgroup_size_y: 0,
+            max_compute_workgroup_size_x: 0,
+            max_compute_invocations_per_workgroup: 0,
+            max_compute_workgroup_storage_size: 0,
+            max_storage_buffer_binding_size: 0,
+            max_storage_textures_per_shader_stage: 0,
+            max_storage_buffers_per_shader_stage: 0,
+            max_dynamic_storage_buffers_per_pipeline_layout: 0,
+            ..Default::default()
+        };
+
+        let (device, queue) = self.adapter.request_device(&DeviceDescriptor {
+            label: Some("Main Adapter"),
+            required_features: Features::empty(),
+            required_limits:   limits,
+            memory_hints: MemoryHints::Performance
+        }, None).await.expect("Error create device or queue");
+
+        self.device = device;
+        self.queue = queue;
     }
 
     pub fn required_features(mut self) {

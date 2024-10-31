@@ -25,72 +25,84 @@ pub use pipeline::*;
 mod shader;
 use shader::*;
 
+type Id = i64;
 
 pub struct Entity<'s,> {
     pub game_resource: Rc<RefCell<GameResource<'s,>>>,
-    pub components: HashMap<usize, Box<dyn Any>>
+    pub components: Vec<Box<dyn Any>>
 }
 
 impl<'s,> Entity<'s,> {
 
     pub fn add_component<T: 'static>(&mut self, component: T) {
-        let id = self.components.len();
-        self.components.insert(id, Box::new(component));
+        self.components.push(Box::new(component));
     }
 
+    ///
+    /// Get first component from entity
+    ///
     pub fn get_component<T: 'static>(&self) -> Option<&T> {
         for i in &self.components {
-            if let Some(x) = i.1.downcast_ref::<T>() {
+            if let Some(x) = i.downcast_ref::<T>() {
                 return Some(x);
             }
         }
         None
     }
 
-    pub fn get_mut_component<T: 'static>(&mut self, id: usize, component: T) -> Option<&mut T>{
-       self.components.get_mut(&id)?.downcast_mut::<T>()
+    pub fn get_mut_component<T: 'static>(&mut self) -> Option<&mut T>{
+        for i in &mut self.components {
+            if let Some(x) = i.downcast_mut::<T>() {
+                return Some(x);
+            }
+        }
+        None
     }
 
-    pub fn remove_component(&mut self, id: usize) {
-        self.components.remove(&id);
+    pub fn remove_component<T: 'static>(&mut self) {
+        for i in 0..self.components.len() {
+            if let Some(x) = self.components[i].downcast_ref::<T>() {
+                self.components.remove(i);
+            }
+        }
     }
 
     pub fn new(game_resource: Rc<RefCell<GameResource<'s,>>>) -> Self {
         Self {
             game_resource,
-            components: HashMap::new()
+            components: vec![]
         }
     }
 }
 
 pub struct GameResource<'s> {
     pub ctx:                        Rc<WebGPUContext<'s>>,
-    pub render_pipeline:            Vec<RenderPipeline>,
-    pub pipeline_layout:            Vec<PipelineLayout>,
-    pub count_vertex:               Vec<usize>,
-    pub vertex_buffer:              Vec<Buffer>,
-    pub index_buffer:               Vec<Buffer>,
-    pub indeces:                    Vec<Vec<u16>>,
-    pub bind_group:                 Vec<BindGroup>,
-    pub vertex_buffer_layout:       Vec<VertexBufferLayout<'static>>,
-    pub uniform_buffer:             Vec<Buffer>,
-    pub shader:                     Vec<ShaderModule>,
+    pub render_pipeline:            HashMap<Id, RenderPipeline>,
+    pub pipeline_layout:            HashMap<Id, PipelineLayout>,
+    pub vertex_count:               HashMap<Id, usize>,
+    pub vertex_buffer:              HashMap<Id, Buffer>,
+    pub index_buffer:               HashMap<Id, Buffer>,
+    pub indeces:                    HashMap<Id, Vec<u16>>,
+    pub bind_group:                 HashMap<Id, BindGroup>,
+    pub vertex_buffer_layout:       HashMap<Id, VertexBufferLayout<'static>>,
+    pub uniform_buffer:             HashMap<Id, Buffer>,
+    pub shader:                     HashMap<Id, ShaderModule>
 }
 
 impl<'s> GameResource<'s> {
     async fn new(ctx: WebGPUContext<'s>, window: &'s Window) -> Rc<RefCell<Self>> {
         Rc::new(RefCell::new(Self {
             ctx:                    ctx.into(),
-            render_pipeline:        vec![],
-            count_vertex:           vec![],
-            vertex_buffer:          vec![],
-            bind_group:             vec![],
-            vertex_buffer_layout:   vec![],
-            uniform_buffer:         vec![],
-            indeces:                vec![],
-            index_buffer:           vec![],
-            pipeline_layout:        vec![],
-            shader:                 vec![],
+            render_pipeline:        HashMap::new(),
+            vertex_count:           HashMap::new(),
+            vertex_buffer:          HashMap::new(),
+            bind_group:             HashMap::new(),
+            vertex_buffer_layout:   HashMap::new(),
+            uniform_buffer:         HashMap::new(),
+            indeces:                HashMap::new(),
+            index_buffer:           HashMap::new(),
+            pipeline_layout:        HashMap::new(),
+            shader:                 HashMap::new(),
         }))
     }
 }

@@ -2,24 +2,28 @@ use std::{collections::HashMap, iter};
 
 use wgpu::{Color, CommandEncoderDescriptor};
 
-use super::{context::resized, Default3DMesh, Entity, GameWorld};
+use super::{context::resized, Mesh3D, Entity, GameWorld};
 
 pub trait RenderSystem {
     fn draw(&self, entity: Vec<&Entity>);
 }
-pub struct DefaultGameRender;
-impl DefaultGameRender {
+pub struct DefaultRenderSystem;
+impl DefaultRenderSystem {
     pub fn new() -> Self {
         Self
     }
 }
 
-impl RenderSystem for DefaultGameRender {
+
+///
+/// Universal Draw for any entity
+/// coming soon
+///
+impl RenderSystem for DefaultRenderSystem {
     fn draw(&self, entity: Vec<&Entity>) {
         // draw entity
     }
 }
-
 
 struct DefaultRender3DMesh;
 impl RenderSystem for DefaultRender3DMesh {

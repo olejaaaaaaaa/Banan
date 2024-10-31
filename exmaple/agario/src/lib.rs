@@ -40,7 +40,7 @@ pub async fn run() {
 
     let mut player = world.create_entity();
 
-    let mesh = Default3DMesh::new(
+    let mesh = Mesh3D::new(
         &player,
         vec![
             Vertex3D{pos: [ 0.0,  0.5, 0.0 ], color: [1.0, 0.0, 0.0]},
@@ -50,13 +50,22 @@ pub async fn run() {
         PrimitiveTopology::TriangleList
     );
 
-    let pipeline = DefaultRenderPipeline::new(&player);
+    player.add_component(mesh);
+
+    let mesh = Mesh3D::new(
+        &player,
+        vec![
+            Vertex3D{pos: [ 0.0,  0.5, 0.0 ], color: [1.0, 0.0, 0.0]},
+            Vertex3D{pos: [-0.5, -0.5, 0.0 ], color: [0.0, 1.0, 0.0]},
+            Vertex3D{pos: [ 0.5, -0.5, 0.0 ], color: [0.0, 0.0, 1.0]},
+        ],
+        PrimitiveTopology::TriangleList
+    );
 
     player.add_component(mesh);
-    player.add_component();
 
     for i in &player.components {
-        warn!("{:?}", i);
+        warn!("{:?}", i.downcast_ref::<Mesh3D>());
     }
 
     main_loop.run(move |event, event_loop_window_target| {
@@ -76,8 +85,7 @@ pub async fn run() {
                     }
 
                     WindowEvent::RedrawRequested => {
-                        let render = DefaultGameRender::new();
-                        render.draw(vec![&player]);
+
                     }
 
                     WindowEvent::Resized(size) => {

@@ -1,5 +1,15 @@
 
 
+struct ComponentBindGroup {
+
+}
+
+
+
+
+
+
+
 
 
 

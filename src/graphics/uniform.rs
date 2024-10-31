@@ -4,7 +4,7 @@ trait Uniform {
     fn index(&self) -> usize;
 }
 
-struct DefaultUniform {
+struct ComponentUniform {
     uniform: usize
 }
 

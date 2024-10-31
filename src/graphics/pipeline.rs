@@ -2,7 +2,7 @@ use std::borrow::Borrow;
 
 use wgpu::{PipelineLayoutDescriptor, PrimitiveState, RenderPipelineDescriptor, VertexState};
 
-use super::{DefaultShader, Entity};
+use super::{ComponentShader, Entity};
 
 struct DefaultRenderPipeline {
     render_pipeline: usize
@@ -11,7 +11,7 @@ struct DefaultRenderPipeline {
 impl DefaultRenderPipeline {
     fn new(entity: &Entity) {
 
-        let shader = entity.get_component::<DefaultShader>().unwrap();
+        let shader = entity.get_component::<ComponentShader>().unwrap();
         let pipeline_layout = entity.get_component::<DefaultPipelineLayout>().unwrap();
 
 

@@ -1,0 +1,9 @@
+
+
+trait Camera {
+
+}
+
+struct ComponentCamera {
+    
+}

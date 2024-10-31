@@ -3,6 +3,9 @@ use wgpu::VertexBufferLayout;
 use wgpu::VertexStepMode;
 use bytemuck::{Pod, Zeroable};
 
+
+
+
 #[repr(C)]
 #[derive(Debug, Clone, Copy, Pod, Zeroable)]
 pub struct Vertex3D {
@@ -21,6 +24,13 @@ pub struct Vertex2D {
 #[derive(Debug, Clone, Copy, Pod, Zeroable)]
 pub struct Position3D {
     pub pos: [f32; 3]
+}
+
+#[repr(C)]
+#[derive(Debug, Clone, Copy, Pod, Zeroable)]
+pub struct Vertex3DTexture {
+    pub pos:        [f32; 3],
+    pub tex_pos:    [f32; 3],
 }
 
 #[repr(C)]

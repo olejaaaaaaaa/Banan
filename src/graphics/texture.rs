@@ -1,0 +1,11 @@
+
+
+trait Texture {
+
+}
+
+struct ComponentTexture {
+
+}
+
+

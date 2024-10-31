@@ -1,11 +1,18 @@
 
+type Id = i64;
 
-trait Uniform {
-    fn index(&self) -> usize;
+pub trait TraitUniform {
+    fn add_uniform(&mut self);
 }
 
-struct ComponentUniform {
-    uniform: usize
+impl TraitUniform for ComponentUniform {
+    fn add_uniform(&mut self) {
+
+    }
+}
+
+pub struct ComponentUniform {
+    uniform: Id
 }
 
 

@@ -16,12 +16,11 @@ extern crate console_error_panic_hook;
 
 extern crate log;
 use log::{debug, error, info, warn};
-
-use hecs::*;
+use wasm_bindgen_futures::spawn_local;
 
 #[wasm_bindgen]
 pub fn main() {
-    pollster::block_on(run());
+    spawn_local(run());
 }
 
 pub async fn run() {
@@ -35,38 +34,31 @@ pub async fn run() {
 
     debug_play();
 
-    let ctx = WebGPUContextBuilder::new(&window).await.build();
+    let ctx = WebGPUContextBuilder::new(&window).await.build().await;
     let mut world = GameWorld::new(ctx, &window).await;
 
     let mut player = world.create_entity();
 
-    let mesh = Mesh3D::new(
-        &player,
-        vec![
-            Vertex3D{pos: [ 0.0,  0.5, 0.0 ], color: [1.0, 0.0, 0.0]},
-            Vertex3D{pos: [-0.5, -0.5, 0.0 ], color: [0.0, 1.0, 0.0]},
-            Vertex3D{pos: [ 0.5, -0.5, 0.0 ], color: [0.0, 0.0, 1.0]},
-        ],
-        PrimitiveTopology::TriangleList
+    player.add_mesh(
+    vec![
+        Vertex3D{ pos: [ 0.0,  0.5,  0.0], color: [1.0, 0.0, 0.0] },
+        Vertex3D{ pos: [-0.5,  0.5,  0.0], color: [0.0, 1.0, 0.0] },
+        Vertex3D{ pos: [ 0.5, -0.5,  0.0], color: [0.0, 0.0, 1.0] }
+    ], PrimitiveTopology::TriangleList);
+
+    player.add_shader("test.wgsl");
+
+    player.add_bind_group_layout_entry(0, ShaderStages::VERTEX,
+        BindingType::Buffer{
+            ty: BufferBindingType::Uniform,
+            has_dynamic_offset: false,
+            min_binding_size: None,
+        },
     );
 
-    player.add_component(mesh);
 
-    let mesh = Mesh3D::new(
-        &player,
-        vec![
-            Vertex3D{pos: [ 0.0,  0.5, 0.0 ], color: [1.0, 0.0, 0.0]},
-            Vertex3D{pos: [-0.5, -0.5, 0.0 ], color: [0.0, 1.0, 0.0]},
-            Vertex3D{pos: [ 0.5, -0.5, 0.0 ], color: [0.0, 0.0, 1.0]},
-        ],
-        PrimitiveTopology::TriangleList
-    );
-
-    player.add_component(mesh);
-
-    for i in &player.components {
-        warn!("{:?}", i.downcast_ref::<Mesh3D>());
-    }
+    warn!("{:?}", player.get_components::<ComponentShader>());
+    player.remove_components::<ComponentShader>();
 
     main_loop.run(move |event, event_loop_window_target| {
 
@@ -85,11 +77,11 @@ pub async fn run() {
                     }
 
                     WindowEvent::RedrawRequested => {
-
+                        world.draw(vec![&player]);
                     }
 
                     WindowEvent::Resized(size) => {
-                        world.resource.borrow().ctx.resize(size);
+                        world.resize(size);
                     }
 
                     _ => ()

@@ -1,4 +1,16 @@
 
-struct UI {
-    
+
+
+
+
+struct ComponentUIButton {
+
+}
+
+struct ComponentUITextInput {
+
+}
+
+struct ComponentUIImage {
+
 }

@@ -1,19 +1,24 @@
-use std::borrow::Borrow;
+use std::{borrow::Borrow, cell::{Ref, RefMut}};
+use wgpu::BindGroupLayout;
+use wgpu::{BindGroupLayoutDescriptor, BindGroupLayoutEntry, PipelineLayout, PipelineLayoutDescriptor, PrimitiveState, RenderPipelineDescriptor, VertexState};
 
-use wgpu::{PipelineLayoutDescriptor, PrimitiveState, RenderPipelineDescriptor, VertexState};
+use crate::get_unique_id;
 
-use super::{ComponentShader, Entity};
+use super::{bind_group, ComponentShader, Entity, GameResource, Id};
 
-struct DefaultRenderPipeline {
-    render_pipeline: usize
+trait TraitRenderPipeline {
+    fn add_render_pipeline(&mut self);
 }
 
-impl DefaultRenderPipeline {
+pub struct ComponentRenderPipeline {
+    pub render_pipeline_id: Id
+}
+
+impl ComponentRenderPipeline {
     fn new(entity: &Entity) {
 
         let shader = entity.get_component::<ComponentShader>().unwrap();
-        let pipeline_layout = entity.get_component::<DefaultPipelineLayout>().unwrap();
-
+        let pipeline_layout = entity.get_component::<ComponentPipelineLayout>().unwrap();
 
         // let pipeline = entity.game_resource.try_borrow().ctx.device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
         //     label: None,
@@ -61,6 +66,26 @@ impl DefaultRenderPipeline {
     }
 }
 
-struct DefaultPipelineLayout {
-    pipeline_layout: usize
+pub struct ComponentPipelineLayout {
+    pub pipeline_layout_id: Id
 }
+
+impl ComponentPipelineLayout {
+    fn new(entity: &Entity, bind_group_layout: &[&BindGroupLayout]) -> Self {
+        let mut res: RefMut<GameResource> = entity.game_resource.borrow_mut();
+
+        let pipeline_layout = res.ctx.device.create_pipeline_layout(&PipelineLayoutDescriptor {
+            label: None,
+            bind_group_layouts: bind_group_layout,
+            push_constant_ranges: &[]
+        });
+
+        let id = get_unique_id::<PipelineLayout>(entity);
+        entity.game_resource.borrow_mut().pipeline_layout.insert(id, pipeline_layout);
+
+        Self {
+            pipeline_layout_id: id
+        }
+    }
+}
+

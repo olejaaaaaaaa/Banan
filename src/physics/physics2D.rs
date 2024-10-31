@@ -1,3 +1,6 @@
 
 
 
+struct ComponentPhysics2D {
+
+}

@@ -1,9 +1,0 @@
-
-
-trait Camera {
-
-}
-
-struct ComponentCamera {
-    
-}

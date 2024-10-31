@@ -2,7 +2,9 @@
 
 
 
-
+struct ComponentPhysics3D {
+    
+}
 
 
 

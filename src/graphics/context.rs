@@ -1,10 +1,11 @@
 #![allow(warnings)]
 #![allow(clippy::all)]
-use std::{iter, rc::Rc};
+use std::{cell::Cell, iter, rc::Rc};
 
 use dpi::PhysicalSize;
 use event::Event;
 use event_loop::{EventLoop, EventLoopWindowTarget};
+use log::warn;
 use wgpu::{util::{BufferInitDescriptor, DeviceExt}, BindGroupDescriptor, BindGroupEntry, BindGroupLayout, BindGroupLayoutDescriptor, BindGroupLayoutEntry, BindingType, Buffer, BufferBinding, BufferBindingType, BufferUsages, Color, CommandEncoderDescriptor, DeviceDescriptor, Features, Limits, MemoryHints, PipelineLayout, PipelineLayoutDescriptor, PrimitiveTopology, RenderPipeline, RequestAdapterOptions, RequestAdapterOptionsBase, ShaderModule, ShaderModuleDescriptor, ShaderStages, Surface, TextureFormat, VertexBufferLayout};
 use window::Window;
 use winit::*;
@@ -12,29 +13,37 @@ use pollster::*;
 
 
 pub struct WebGPUContext<'s> {
-    pub window: &'s Window,
-    pub surface: Surface<'s>,
-    pub adapter: wgpu::Adapter,
-    pub device: wgpu::Device,
-    pub instance: wgpu::Instance,
+    pub resized:        Cell<bool>,
+    pub window:         &'s Window,
+    pub surface:        Surface<'s>,
+    pub adapter:        wgpu::Adapter,
+    pub device:         wgpu::Device,
+    pub instance:       wgpu::Instance,
     pub surface_config: wgpu::SurfaceConfiguration,
-    pub surface_caps: wgpu::SurfaceCapabilities,
+    pub surface_caps:   wgpu::SurfaceCapabilities,
     pub surface_format: wgpu::TextureFormat,
-    pub queue: wgpu::Queue,
+    pub queue:          wgpu::Queue,
 }
-
-pub static mut resized: bool = false;
-
 
 impl<'s> WebGPUContext<'s> {
 
     pub fn resize(&self, size: PhysicalSize<u32>) {
 
+        let mut width = size.width;
+        let mut height = size.height;
+
+        let max_texture_size = self.device.limits().max_texture_dimension_1d;
+
+        if width > max_texture_size || height > max_texture_size {
+            width = max_texture_size;
+            height = max_texture_size;
+        }
+
         let surface_config = wgpu::SurfaceConfiguration {
             usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
             format: self.surface_format,
-            width: size.width.min(640),
-            height: size.height.min(640),
+            width: width,
+            height: height,
             present_mode: self.surface_caps.present_modes[0],
             alpha_mode: self.surface_caps.alpha_modes[0],
             view_formats: vec![],
@@ -42,21 +51,21 @@ impl<'s> WebGPUContext<'s> {
         };
 
         self.surface.configure(&self.device, &surface_config);
-        unsafe { resized = true };
+        self.resized.set(true);
     }
 
 }
 
 pub struct WebGPUContextBuilder<'s> {
-    pub window: &'s Window,
-    pub surface: Surface<'s>,
-    pub adapter: wgpu::Adapter,
-    pub device: wgpu::Device,
-    pub instance: wgpu::Instance,
-    pub surface_config: wgpu::SurfaceConfiguration,
-    pub surface_caps: wgpu::SurfaceCapabilities,
-    pub surface_format: wgpu::TextureFormat,
-    pub queue: wgpu::Queue,
+    pub window:         &'s Window,
+    pub surface:        Option<Surface<'s>>,
+    pub adapter:        Option<wgpu::Adapter>,
+    pub device:         Option<wgpu::Device>,
+    pub instance:       Option<wgpu::Instance>,
+    pub surface_config: Option<wgpu::SurfaceConfiguration>,
+    pub surface_caps:   Option<wgpu::SurfaceCapabilities>,
+    pub surface_format: Option<wgpu::TextureFormat>,
+    pub queue:          Option<wgpu::Queue>,
 }
 
 
@@ -74,6 +83,7 @@ impl<'s> WebGPUContextBuilder<'s> {
     pub async fn new(window: &'s Window) -> Self {
 
         Self::create_canvas(window);
+
         let instance = wgpu::Instance::default();
         let surface = instance.create_surface(window).expect("Error create surface");
         let adapter = instance.request_adapter(&RequestAdapterOptions {
@@ -81,13 +91,6 @@ impl<'s> WebGPUContextBuilder<'s> {
             force_fallback_adapter: false,
             compatible_surface: Some(&surface)
         }).await.expect("Error create adapter");
-
-        let (device, queue) = adapter.request_device(&DeviceDescriptor {
-            label: Some("Main Adapter"),
-            required_features: Features::empty(),
-            required_limits: Limits::downlevel_webgl2_defaults(),
-            memory_hints: MemoryHints::Performance
-        }, None).await.expect("Error create device or queue");
 
         let surface_caps = surface.get_capabilities(&adapter);
         let surface_format = surface_caps.formats
@@ -109,28 +112,31 @@ impl<'s> WebGPUContextBuilder<'s> {
 
         Self {
             window,
-            adapter,
-            device,
-            instance,
-            surface_config,
-            surface_caps,
-            surface_format,
-            queue,
-            surface,
+            surface:        Some(surface),
+            adapter:        Some(adapter),
+            device:         None,
+            queue:          None,
+            instance:       Some(instance),
+            surface_config: Some(surface_config),
+            surface_caps:   Some(surface_caps),
+            surface_format: Some(surface_format),
         }
 
     }
 
-
-    pub fn required_limits(mut self) {
-
-    }
-
     pub async fn with_webgl2_limits(mut self) {
+        let (device, queue) = self.adapter.unwrap().request_device(&DeviceDescriptor {
+            label:              Some("Main Adapter"),
+            required_features:  Features::empty(),
+            required_limits:    Limits::downlevel_webgl2_defaults(),
+            memory_hints:       MemoryHints::Performance
+        }, None).await.expect("Error create device or queue");
 
+        self.device = Some(device);
+        self.queue = Some(queue);
     }
 
-    pub async fn with_webgl_limits(mut self) {
+    pub async fn with_webgl_limits(mut self) -> Self {
 
         let limits = wgpu::Limits {
             max_compute_workgroups_per_dimension: 0,
@@ -146,40 +152,53 @@ impl<'s> WebGPUContextBuilder<'s> {
             ..Default::default()
         };
 
-        let (device, queue) = self.adapter.request_device(&DeviceDescriptor {
+        let (device, queue) = self.adapter.as_ref().unwrap().request_device(&DeviceDescriptor {
+            label:                  Some("Main Adapter"),
+            required_features:      Features::empty(),
+            required_limits:        limits,
+            memory_hints:           MemoryHints::Performance
+        }, None).await.expect("Error create device or queue");
+
+        self.device = Some(device);
+        self.queue = Some(queue);
+
+        self
+    }
+
+    pub async fn memory_hints(mut self, memory: MemoryHints) -> Self {
+
+        let limits = self.device.unwrap().limits();
+        let (device, queue) = self.adapter.as_ref().unwrap().request_device(&DeviceDescriptor {
             label: Some("Main Adapter"),
             required_features: Features::empty(),
             required_limits:   limits,
-            memory_hints: MemoryHints::Performance
+            memory_hints:      memory
         }, None).await.expect("Error create device or queue");
 
-        self.device = device;
-        self.queue = queue;
+        self.device = Some(device);
+        self.queue = Some(queue);
+        self
     }
 
-    pub fn required_features(mut self) {
+    pub async fn build(mut self) -> WebGPUContext<'s> {
 
-    }
+        if self.queue.is_none() || self.device.is_none() {
+            self = Self::with_webgl_limits(self).await;
+        }
 
-    pub fn memory_hints(mut self) {
-
-    }
-
-    pub fn power_preference(mut self) {
-
-    }
-
-    pub fn build(self) -> WebGPUContext<'s> {
-        WebGPUContext {
-            window:         &self.window,
-            surface:        self.surface,
-            adapter:        self.adapter,
-            device:         self.device,
-            instance:       self.instance,
-            surface_config: self.surface_config,
-            surface_caps:   self.surface_caps,
-            surface_format: self.surface_format,
-            queue:          self.queue
+        unsafe {
+            WebGPUContext {
+                window:         &self.window,
+                resized:        false.into(),
+                surface:        self.surface.unwrap_unchecked(),
+                adapter:        self.adapter.unwrap_unchecked(),
+                device:         self.device.unwrap_unchecked(),
+                instance:       self.instance.unwrap_unchecked(),
+                surface_config: self.surface_config.unwrap_unchecked(),
+                surface_caps:   self.surface_caps.unwrap_unchecked(),
+                surface_format: self.surface_format.unwrap_unchecked(),
+                queue:          self.queue.unwrap_unchecked()
+            }
         }
     }
 

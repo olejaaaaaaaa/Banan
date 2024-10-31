@@ -7,19 +7,19 @@ use wasm_bindgen::prelude::*;
 use web_sys::{HtmlButtonElement, window};
 
 
-struct Audio {
-    
+struct ComponentAudio {
+
 }
 
 pub fn debug_play() {
     let document = window().unwrap().document().unwrap();
-    
+
     // Создаем кнопку
     let button: HtmlButtonElement = document.create_element("button").unwrap()
             .dyn_into().unwrap();
     button.set_inner_html("Play Music");
     document.body().unwrap().append_child(&button).unwrap();
-    
+
     // Создаем элемент audio
     let audio: HtmlAudioElement = document.create_element("audio").unwrap()
             .dyn_into().unwrap();

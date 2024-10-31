@@ -7,7 +7,6 @@ use wasm_bindgen::prelude::*;
 use web_sys::*;
 use banan::*;
 use winit::*;
-use pollster;
 use wgpu::*;
 use log::log;
 use crate::js_sys::Date;
@@ -36,12 +35,29 @@ pub async fn run() {
 
     debug_play();
 
-    let ctx = WebGPUContextBuilder::new().await.build();
+    let ctx = WebGPUContextBuilder::new(&window).await.build();
     let mut world = GameWorld::new(ctx, &window).await;
-    let player = world.create_entity();
 
-    player.add_component([0.0, 0.0, 0.0]);
+    let mut player = world.create_entity();
 
+    let mesh = Default3DMesh::new(
+        &player,
+        vec![
+            Vertex3D{pos: [ 0.0,  0.5, 0.0 ], color: [1.0, 0.0, 0.0]},
+            Vertex3D{pos: [-0.5, -0.5, 0.0 ], color: [0.0, 1.0, 0.0]},
+            Vertex3D{pos: [ 0.5, -0.5, 0.0 ], color: [0.0, 0.0, 1.0]},
+        ],
+        PrimitiveTopology::TriangleList
+    );
+
+    let pipeline = DefaultRenderPipeline::new(&player);
+
+    player.add_component(mesh);
+    player.add_component();
+
+    for i in &player.components {
+        warn!("{:?}", i);
+    }
 
     main_loop.run(move |event, event_loop_window_target| {
 
@@ -60,11 +76,12 @@ pub async fn run() {
                     }
 
                     WindowEvent::RedrawRequested => {
-
+                        let render = DefaultGameRender::new();
+                        render.draw(vec![&player]);
                     }
 
                     WindowEvent::Resized(size) => {
-
+                        world.resource.borrow().ctx.resize(size);
                     }
 
                     _ => ()

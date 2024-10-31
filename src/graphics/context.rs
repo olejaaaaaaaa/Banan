@@ -13,17 +13,17 @@ use pollster::*;
 
 pub struct WebGPUContext<'s> {
     pub window: &'s Window,
-    surface: Surface<'s>,
-    adapter: wgpu::Adapter,
+    pub surface: Surface<'s>,
+    pub adapter: wgpu::Adapter,
     pub device: wgpu::Device,
-    instance: wgpu::Instance,
-    surface_config: wgpu::SurfaceConfiguration,
-    surface_caps: wgpu::SurfaceCapabilities,
-    surface_format: wgpu::TextureFormat,
-    queue: wgpu::Queue,
+    pub instance: wgpu::Instance,
+    pub surface_config: wgpu::SurfaceConfiguration,
+    pub surface_caps: wgpu::SurfaceCapabilities,
+    pub surface_format: wgpu::TextureFormat,
+    pub queue: wgpu::Queue,
 }
 
-static mut resized: bool = false;
+pub static mut resized: bool = false;
 
 ///
 ///
@@ -73,10 +73,9 @@ impl<'s> WebGPUContextBuilder<'s> {
         body.append_child(&canvas);
     }
 
-    async fn new(window: &'s Window) -> Self {
+    pub async fn new(window: &'s Window) -> Self {
 
         Self::create_canvas(window);
-
         let instance = wgpu::Instance::default();
         let surface = instance.create_surface(window).expect("Error create surface");
         let adapter = instance.request_adapter(&RequestAdapterOptions {

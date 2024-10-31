@@ -1,43 +1,55 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, iter};
 
-use super::{Entity, GameWorld};
+use wgpu::{Color, CommandEncoderDescriptor};
+
+use super::{context::resized, Default3DMesh, Entity, GameWorld};
 
 pub trait RenderSystem {
-    fn draw(&self, world: &GameWorld, entiy: &Vec<Entity>);
+    fn draw(&self, entity: Vec<&Entity>);
+}
+pub struct DefaultGameRender;
+impl DefaultGameRender {
+    pub fn new() -> Self {
+        Self
+    }
 }
 
-pub trait UpdateSystem {
-    fn update(&self, world: &mut GameWorld, dt: f32);
+impl RenderSystem for DefaultGameRender {
+    fn draw(&self, entity: Vec<&Entity>) {
+        // draw entity
+    }
 }
 
-pub struct DefaultUpdateSystem;
 
-impl UpdateSystem for DefaultUpdateSystem {
-    fn update(&self, world: &mut GameWorld, dt: f32) {
-        for entity in &mut world.entity {
-            // Обрабатывайте логику обновления сущности
+struct DefaultRender3DMesh;
+impl RenderSystem for DefaultRender3DMesh {
+    fn draw(&self, entity: Vec<&Entity>) {
+
+        if unsafe { !resized } { return; }
+
+        let mut encoder =   entity[0].game_resource.borrow().ctx.device.create_command_encoder(&CommandEncoderDescriptor { label: None });
+        let mut output = entity[0].game_resource.borrow().ctx.surface.get_current_texture().unwrap();
+        let view = output.texture.create_view(&wgpu::TextureViewDescriptor::default());
+
+        {
+            let mut rpass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
+                label: Some("Render Pass"),
+                color_attachments: &[Some(wgpu::RenderPassColorAttachment {
+                    view: &view,
+                    resolve_target: None,
+                    ops: wgpu::Operations {
+                        load: wgpu::LoadOp::Clear(Color { r: 0.0, g: 0.2, b: 0.0, a: 1.0 }),
+                        store: wgpu::StoreOp::Discard,
+                    },
+                })],
+                depth_stencil_attachment: None,
+                occlusion_query_set: None,
+                timestamp_writes: None,
+            });
+
         }
-    }
-}
 
-pub struct GameSystems {
-    render_system: Box<dyn RenderSystem>,
-    update_system: Box<dyn UpdateSystem>,
-}
-
-impl GameSystems {
-    pub fn new(render_system: Box<dyn RenderSystem>, update_system: Box<dyn UpdateSystem>) -> Self {
-        Self {
-            render_system,
-            update_system
-        }
-    }
-
-    pub fn update(&self, world: &mut GameWorld, dt: f32) {
-        self.update_system.update(world, dt);
-    }
-
-    pub fn draw(&self, world: &GameWorld, entities: &Vec<Entity>) {
-        self.render_system.draw(world, entities);
+        entity[0].game_resource.borrow().ctx.queue.submit(iter::once(encoder.finish()));
+        output.present();
     }
 }

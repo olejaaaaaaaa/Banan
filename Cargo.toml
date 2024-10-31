@@ -1,6 +1,6 @@
 [package]
 name = "banan"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["oleja <olejav7@gmail.com>"]
 edition = "2018"
 
@@ -41,8 +41,8 @@ web-sys = { version = "0.3.69", features = [
   'OscillatorType',
   'Headers',
   'Request',
-  'RequestInit', 
-  'RequestMode', 
+  'RequestInit',
+  'RequestMode',
   'Response',
   'Window'
 ]}

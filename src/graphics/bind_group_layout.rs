@@ -6,7 +6,7 @@ use crate::get_unique_id;
 use super::{ComponentBindGroupLayoutEntry, Entity, Id};
 
 
-trait TraitBindGroupLayout {
+pub trait TraitBindGroupLayout {
     fn add_bind_group_layout(&mut self);
 }
 
@@ -24,20 +24,42 @@ pub struct ComponentBindGrouplayout {
 impl ComponentBindGrouplayout {
     fn new(entity: &Entity) -> ComponentBindGrouplayout {
 
-        let bind_group_layout_entry = entity.get_components::<ComponentBindGroupLayoutEntry>().unwrap().clone();
-        let mut res = entity.game_resource.borrow_mut();
-        let entry = bind_group_layout_entry.iter().map(|x| res.bind_group_layout_entry[&x.bind_group_layout_entry_id]).collect::<Vec<_>>();
+        match entity.get_components::<ComponentBindGroupLayoutEntry>() {
 
-        let bind_group_layout = res.ctx.device.create_bind_group_layout(&BindGroupLayoutDescriptor {
-            label: None,
-            entries: entry.as_slice()
-        });
+            Some(bind) => {
 
-        let id = get_unique_id::<BindGroupLayout>(entity);
-        res.bind_group_layout.insert(id, bind_group_layout);
+                let mut res = entity.game_resource.borrow_mut();
+                let entry = bind.iter().map(|x| res.bind_group_layout_entry[&x.bind_group_layout_entry_id]).collect::<Vec<_>>();
 
-        Self {
-            bind_group_layout_id: id
+                let bind_group_layout = res.ctx.device.create_bind_group_layout(&BindGroupLayoutDescriptor {
+                    label: None,
+                    entries: entry.as_slice()
+                });
+
+                let id = get_unique_id::<BindGroupLayout>(entity);
+                res.bind_group_layout.insert(id, bind_group_layout);
+
+
+                Self {
+                    bind_group_layout_id: id
+                }
+            }
+
+            None => {
+                let mut res = entity.game_resource.borrow_mut();
+
+                let bind_group_layout = res.ctx.device.create_bind_group_layout(&BindGroupLayoutDescriptor {
+                    label: None,
+                    entries: &[]
+                });
+
+                let id = get_unique_id::<BindGroupLayout>(entity);
+                res.bind_group_layout.insert(id, bind_group_layout);
+
+                Self {
+                    bind_group_layout_id: id
+                }
+            }
         }
     }
 }

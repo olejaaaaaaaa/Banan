@@ -12,7 +12,7 @@ impl TraitUniform for ComponentUniform {
 }
 
 pub struct ComponentUniform {
-    uniform: Id
+    id: Id
 }
 
 

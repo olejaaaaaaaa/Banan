@@ -1,6 +1,6 @@
 use std::{cell::RefCell, collections::HashMap, iter, rc::Rc};
 use wgpu::{Color, CommandEncoderDescriptor};
-use super::{Entity, GameResource, GameWorld, Mesh3D};
+use super::{ComponentRenderPipeline3DMesh, Entity, GameResource, GameWorld, Mesh3D};
 
 pub trait RenderSystem {
     fn draw(&self, entity: Vec<&Entity>);
@@ -9,12 +9,12 @@ pub trait RenderSystem {
 impl<'s> RenderSystem for GameWorld<'s> {
     fn draw(&self, entity: Vec<&Entity>) {
 
-        let ctx = &self.resource.borrow().ctx;
+        let res = &self.resource.borrow();
 
-        if !ctx.resized.get() { return; }
+        if !res.ctx.resized.get() { return; }
 
-        let mut encoder = ctx.device.create_command_encoder(&CommandEncoderDescriptor { label: Some("Default Command Encoder") });
-        let mut output =  ctx.surface.get_current_texture().unwrap();
+        let mut encoder = res.ctx.device.create_command_encoder(&CommandEncoderDescriptor { label: Some("Default Command Encoder") });
+        let mut output =  res.ctx.surface.get_current_texture().unwrap();
         let view = output.texture.create_view(&wgpu::TextureViewDescriptor::default());
 
         {
@@ -33,9 +33,18 @@ impl<'s> RenderSystem for GameWorld<'s> {
                 timestamp_writes: None,
             });
 
+            for i in entity {
+                let pipeline = i.get_component::<ComponentRenderPipeline3DMesh>().unwrap();
+                let mesh = i.get_component::<Mesh3D>().unwrap();
+
+                rpass.set_pipeline(&res.render_pipeline[&pipeline.render_pipeline_id]);
+                rpass.set_vertex_buffer(0, res.vertex_buffer[&mesh.vertex_buffer_id].slice(..));
+                rpass.draw(0..res.vertex_count[&mesh.vertex_count_id] as u32, 0..1);
+            }
+
         }
 
-        ctx.queue.submit(iter::once(encoder.finish()));
+        res.ctx.queue.submit(iter::once(encoder.finish()));
         output.present();
     }
 }

@@ -9,15 +9,15 @@ use bytemuck::{Pod, Zeroable};
 #[repr(C)]
 #[derive(Debug, Clone, Copy, Pod, Zeroable)]
 pub struct Vertex3D {
+    pub pos:   [f32; 3],
     pub color: [f32; 3],
-    pub pos:   [f32; 3]
 }
 
 #[repr(C)]
 #[derive(Debug, Clone, Copy, Pod, Zeroable)]
 pub struct Vertex2D {
+    pub pos:   [f32; 2],
     pub color: [f32; 3],
-    pub pos:   [f32; 2]
 }
 
 #[repr(C)]
@@ -52,7 +52,7 @@ impl WebGPUType for Vec<Vertex3D> {
 
     fn layout(&self) -> VertexBufferLayout<'static> {
         VertexBufferLayout {
-            array_stride:   size_of::<Vertex3D>() as u64,
+            array_stride:   24,
             step_mode:      VertexStepMode::Vertex,
             attributes:     &[
 
@@ -64,7 +64,7 @@ impl WebGPUType for Vec<Vertex3D> {
 
                 VertexAttribute {
                     format:             wgpu::VertexFormat::Float32x3,
-                    offset:             size_of::<[f32; 3]>() as u64,
+                    offset:             12,
                     shader_location:    1,
                 }
 
@@ -82,7 +82,7 @@ impl WebGPUType for Vec<Vertex2D> {
 
     fn layout(&self) -> VertexBufferLayout<'static> {
         VertexBufferLayout {
-            array_stride:   size_of::<Vertex3D>() as u64,
+            array_stride:   24,
             step_mode:      VertexStepMode::Vertex,
             attributes:     &[
 
@@ -94,7 +94,7 @@ impl WebGPUType for Vec<Vertex2D> {
 
                 VertexAttribute {
                     format:             wgpu::VertexFormat::Float32x2,
-                    offset:             size_of::<[f32; 3]>() as u64,
+                    offset:             size_of::<[f32; 2]>() as u64,
                     shader_location:    1,
                 }
 

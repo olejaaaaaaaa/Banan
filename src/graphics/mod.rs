@@ -15,9 +15,6 @@ pub use mesh::*;
 mod render2d;
 pub use render2d::*;
 
-mod render3d;
-pub use render3d::*;
-
 mod types;
 pub use types::*;
 
@@ -43,22 +40,22 @@ mod bind_group_layout_entry;
 pub use bind_group_layout_entry::*;
 
 mod pipelinelayout;
-use pipelinelayout::*;
+pub use pipelinelayout::*;
 
 type Id = i64;
 
-pub struct Entity<'s,> {
-    pub game_resource: Rc<RefCell<GameResource<'s,>>>,
+pub struct Entity<'s, 'p> {
+    pub game_resource: Rc<RefCell<GameResource<'s, 'p>>>,
     pub components: Vec<Box<dyn Any>>
 }
 
-impl Drop for Entity<'_> {
+impl Drop for Entity<'_, '_> {
     fn drop(&mut self) {
         warn!("DROP {}", self.components.len());
     }
 }
 
-impl<'s,> Entity<'s,> {
+impl<'s, 'p> Entity<'s, 'p> {
 
     pub fn add_component<T: 'static>(&mut self, component: T) {
         self.components.push(Box::new(component));
@@ -131,7 +128,7 @@ impl<'s,> Entity<'s,> {
         }
     }
 
-    pub fn new(game_resource: Rc<RefCell<GameResource<'s,>>>) -> Self {
+    pub fn new(game_resource: Rc<RefCell<GameResource<'s, 'p>>>) -> Self {
         Self {
             game_resource,
             components: vec![]
@@ -139,7 +136,7 @@ impl<'s,> Entity<'s,> {
     }
 }
 
-pub struct GameResource<'s> {
+pub struct GameResource<'s, 'p> {
     pub ctx:                        Rc<WebGPUContext<'s>>,
     pub render_pipeline:            HashMap<Id, RenderPipeline>,
     pub pipeline_layout:            HashMap<Id, PipelineLayout>,
@@ -149,14 +146,16 @@ pub struct GameResource<'s> {
     pub indeces:                    HashMap<Id, Vec<u16>>,
     pub bind_group:                 HashMap<Id, BindGroup>,
     pub bind_group_layout:          HashMap<Id, BindGroupLayout>,
-    pub bind_group_entry:           HashMap<Id, BindGroupEntry<'static>>,
+    pub bind_group_entry:           HashMap<Id, BindGroupEntry<'p>>,
+    pub binding_resource:           HashMap<Id, BindingResource<'p>>,
     pub vertex_buffer_layout:       HashMap<Id, VertexBufferLayout<'static>>,
     pub uniform_buffer:             HashMap<Id, Buffer>,
     pub shader:                     HashMap<Id, ShaderModule>,
-    pub bind_group_layout_entry:    HashMap<Id, BindGroupLayoutEntry>
+    pub bind_group_layout_entry:    HashMap<Id, BindGroupLayoutEntry>,
+    pub texture_buffer:             HashMap<Id, Buffer>,
 }
 
-impl<'s> GameResource<'s> {
+impl<'s, 'p> GameResource<'s, 'p> {
     async fn new(ctx: WebGPUContext<'s>, window: &'s Window) -> Rc<RefCell<Self>> {
         Rc::new(RefCell::new(Self {
             ctx:                        ctx.into(),
@@ -172,17 +171,19 @@ impl<'s> GameResource<'s> {
             bind_group:                 HashMap::new(),
             bind_group_layout:          HashMap::new(),
             bind_group_entry:           HashMap::new(),
-            bind_group_layout_entry:    HashMap::new()
+            bind_group_layout_entry:    HashMap::new(),
+            texture_buffer:             HashMap::new(),
+            binding_resource:           HashMap::new(),
         }))
     }
 }
 
-pub struct GameWorld<'s,> {
-    pub resource:   Rc<RefCell<GameResource<'s,>>>,
-    pub entity:     Vec<Entity<'s,>>
+pub struct GameWorld<'s, 'p> {
+    pub resource:   Rc<RefCell<GameResource<'s, 'p>>>,
+    pub entity:     Vec<Entity<'s, 'p>>
 }
 
-impl<'s,> GameWorld<'s,> {
+impl<'s, 'p> GameWorld<'s, 'p> {
     pub async fn new(ctx: WebGPUContext<'s>, window: &'s Window) -> Self {
         Self {
             resource: GameResource::new(ctx, window).await,
@@ -190,7 +191,7 @@ impl<'s,> GameWorld<'s,> {
         }
     }
 
-    pub fn create_entity(&self) -> Entity<'s,> {
+    pub fn create_entity(&self) -> Entity<'s, 'p> {
         Entity::new(self.resource.clone())
     }
 

@@ -42,8 +42,8 @@ impl<'s> WebGPUContext<'s> {
         let surface_config = wgpu::SurfaceConfiguration {
             usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
             format: self.surface_format,
-            width: width,
-            height: height,
+            width: 640,
+            height: 640,
             present_mode: self.surface_caps.present_modes[0],
             alpha_mode: self.surface_caps.alpha_modes[0],
             view_formats: vec![],

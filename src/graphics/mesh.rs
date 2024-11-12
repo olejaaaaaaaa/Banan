@@ -15,21 +15,13 @@ pub struct Mesh3DTexture {
 }
 
 pub trait Trait3DMesh {
-    fn add_mesh(&mut self, vertex: Vec<Vertex3D>, topology: PrimitiveTopology) -> &mut Mesh3D;
+    fn add_mesh(&mut self, vertex: Vec<Vertex3D>, indeces: Option<&[u16]>);
 }
 
 impl Trait3DMesh for Entity<'_> {
 
-    fn add_mesh(&mut self, vertex: Vec<Vertex3D>, topology: PrimitiveTopology) -> &mut Mesh3D {
-        self.add_component(Mesh3D::new(self, vertex, topology));
-
-        use wgpu::*;
-
-
-
-        self.components.last_mut().unwrap().downcast_mut::<Mesh3D>().unwrap()
-
-
+    fn add_mesh(&mut self, vertex: Vec<Vertex3D>, indeces: Option<&[u16]>) {
+        self.add_component(Mesh3D::new(self, vertex, indeces));
     }
 
 }
@@ -41,12 +33,11 @@ pub struct Mesh3D {
     pub vertex_buffer_id:   Id,
     pub index_buffer_id:    Option<Id>,
     pub indeces_id:         Option<Id>,
-    pub topology:           PrimitiveTopology
 }
 
 impl Mesh3D {
 
-    pub fn new(entity: &Entity, vertex: Vec<Vertex3D>, topology: PrimitiveTopology,) -> Self {
+    pub fn new(entity: &Entity, vertex: Vec<Vertex3D>, indeces: Option<&[u16]>) -> Self {
 
         let buffer = entity.game_resource.borrow().ctx.device.create_buffer_init(&BufferInitDescriptor {
             label: None,
@@ -62,11 +53,33 @@ impl Mesh3D {
         res.vertex_buffer.insert(vertex_buffer_id, buffer);
         res.vertex_count.insert(vertex_count_id, vertex.len());
 
+        if let Some(indexes) = indeces {
+
+            let index_buffer = entity.game_resource.borrow().ctx.device.create_buffer_init(&BufferInitDescriptor {
+                label: None,
+                contents: vertex.bytes(),
+                usage: BufferUsages::COPY_DST | BufferUsages::INDEX,
+            });
+
+            let index_buffer_id = get_unique_id::<Buffer>(entity);
+            let indeces_id = get_unique_id::<usize>(entity);
+
+            res.indeces.insert(indeces_id, indexes.to_vec());
+            res.index_buffer.insert(index_buffer_id, index_buffer);
+
+            return Self {
+                vertex_count_id:    vertex_count_id,
+                vertex:             vertex,
+                vertex_buffer_id:   vertex_buffer_id,
+                indeces_id:         Some(indeces_id),
+                index_buffer_id:    Some(index_buffer_id)
+            }
+        }
+
         Self {
             vertex_count_id:    vertex_count_id,
             vertex:             vertex,
             vertex_buffer_id:   vertex_buffer_id,
-            topology:           topology,
             indeces_id:         None,
             index_buffer_id:    None
         }

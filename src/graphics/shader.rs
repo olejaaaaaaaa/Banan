@@ -16,7 +16,7 @@ impl TraitShader for Entity<'_> {
 
 #[derive(Debug)]
 pub struct ComponentShader {
-    pub shader_id: Id,
+    pub id: Id,
 }
 
 impl ComponentShader {
@@ -32,13 +32,13 @@ impl ComponentShader {
         res.shader.insert(id, shader);
 
         ComponentShader {
-            shader_id: id
+            id: id
         }
     }
 }
 
 impl Drop for ComponentShader{
     fn drop(&mut self) {
-        warn!("Drop Component Shader {}", self.shader_id);
+        warn!("Drop Component Shader {}", self.id);
     }
 }

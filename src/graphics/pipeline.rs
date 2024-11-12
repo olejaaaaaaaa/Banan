@@ -6,7 +6,7 @@ use crate::get_unique_id;
 
 use super::{bind_group, ComponentPipelineLayout, ComponentShader, Entity, GameResource, Id, Mesh3D, WebGPUType};
 
-trait TraitRenderPipeline {
+pub trait TraitRenderPipeline {
     fn add_render_pipeline(&mut self);
 }
 
@@ -32,16 +32,17 @@ impl ComponentRenderPipeline3DMesh {
 
         let pipeline = res.ctx.device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
             label: None,
-            layout: Some(&res.pipeline_layout[&pipeline_layout.pipeline_layout_id]),
+            layout: None,
+            //layout: Some(&res.pipeline_layout[&pipeline_layout.pipeline_layout_id]),
             vertex: wgpu::VertexState {
-                module: &res.shader[&shader.shader_id],
+                module: &res.shader[&shader.id],
                 entry_point: "vs_main",
                 compilation_options: Default::default(),
                 buffers: &[vertex_buffer_layout],
             },
 
             fragment: Some(wgpu::FragmentState {
-                module: &res.shader[&shader.shader_id],
+                module: &res.shader[&shader.id],
                 entry_point: "fs_main",
                 compilation_options: Default::default(),
                 targets: &[Some(wgpu::ColorTargetState {

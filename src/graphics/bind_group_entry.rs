@@ -1,6 +1,6 @@
 use super::{Entity, Id};
 
-trait TraitBindGroupEntry {
+pub trait TraitBindGroupEntry {
     fn add_bind_group_entry(&mut self);
 }
 

@@ -1,6 +1,6 @@
 
 # Mini Game Engine
-[![docs](https://docs.rs/Banan/badge.svg)](https://github.com/olejaaaaaaaa/Pixel/docs/index.md)
+[![docs](https://docs.rs/Banan/badge.svg)](https://github.com/olejaaaaaaaa/Banan/docs/index.md)
 ![example workflow](https://github.com/olejaaaaaaaa/Banan/actions/workflows/rust.yml/badge.svg)
 [![Crates.io](https://img.shields.io/crates/v/Banan.svg?label=Banan)](https://crates.io/crates/Banan)
 

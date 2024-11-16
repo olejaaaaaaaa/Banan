@@ -3,6 +3,7 @@
 [![docs](https://docs.rs/Banan/badge.svg)](https://github.com/olejaaaaaaaa/Banan/docs/index.md)
 ![example workflow](https://github.com/olejaaaaaaaa/Banan/actions/workflows/rust.yml/badge.svg)
 [![Crates.io](https://img.shields.io/crates/v/Banan.svg?label=Banan)](https://crates.io/crates/Banan)
+[![GPLv3 License](https://img.shields.io/badge/License-GPL%20v3-yellow.svg)](https://opensource.org/licenses/)
 
 Small web game engine for creating small or medium-sized 2D/3D games
 
@@ -24,7 +25,7 @@ Small game engine for creating small or medium-sized 2D/3D games
 ![project](https://github.com/olejaaaaaaaa/Banan/blob/main/structure-project.png)
 
 
-[![GPLv3 License](https://img.shields.io/badge/License-GPL%20v3-yellow.svg)](https://opensource.org/licenses/)
+
 
 
 
